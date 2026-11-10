@@ -50,15 +50,17 @@ const CLIP_C = (extra: Partial<ClipSpec> = {}): ClipSpec => ({ p: [XC, 0, ZC], y
 const XF = XC + CLIP_D / 2, XB = XC - CLIP_D / 2; // clip faces along x (front = edge side)
 
 /** From the charger, droop down and come up the right side of the desk to the top edge at z. */
-const chargerToRightEdge = (z: number, droop = 0): V3[] => [
-  CHARGER_OUT,
-  [CHARGER_OUT[0] - 0.6, CHARGER_OUT[1] - 2.2, CHARGER_OUT[2] + 2.4],
-  [15, -40 - droop, mixn(-50, z, 0.25)],
-  [8, -38 - droop * 0.7, mixn(-40, z, 0.5)],
-  [2.6, -18 - droop * 0.3, mixn(-28, z, 0.8)],
-  [0.9, -5, z],
-  [0.5, -1.1, z],
-];
+const chargerToRightEdge = (z: number, droop = 0): V3[] => {
+  const [cx, cy, cz] = CHARGER_OUT;
+  return [
+    CHARGER_OUT,
+    [cx - 0.3, cy - 2.0, cz + 2.2],
+    [mixn(cx, 1.5, 0.35), cy - 12 - droop, mixn(cz, z, 0.3)],
+    [mixn(cx, 1.2, 0.7), cy - 9 - droop * 0.6, mixn(cz, z, 0.62)],
+    [1.0, -5, z],
+    [0.5, -1.1, z],
+  ];
+};
 /**
  * A cable along the desk top from the right edge (at zEdge) to its plug at tipX, optionally held in the clip at
  * (zClip, yClip). `lift` raises everything on the desk (a hand holding it up).
@@ -94,12 +96,13 @@ export const INSERTS: Insert[] = [
   {
     id: "under", t0: 2.2, t1: 4.44,
     at: (t) => {
-      const cam = camMove(t, 2.2, 4.3, { pos: [16, 14, -2], target: [-6, -22, -18], fov: 36 }, { pos: [13, 2, -5], target: [-1, -64, -22], fov: 34 });
+      // looking over the right edge: the empty spot on the desk, then down to the floor where the cable lies
+      const cam = camMove(t, 2.3, 3.95, { pos: [26, 25, -15], target: [-2, -2, -20], fov: 40 }, { pos: [25, 23, -15], target: [5.5, -75, -27], fov: 40 });
       const s = base(cam, "night", [2, -50, -25], 55);
       const fy = -75;
       const settle = bounce(t, 2.2, 0.5, 5, 6);
       s.cables.push(cable("floor", [
-        CHARGER_OUT, [20, -34, -57], [18, -52, -55], [17, fy + R0, -49], [12, fy + R0, -42], [6, fy + R0, -36], [9, fy + R0, -28], [5.5, fy + R0, -20], [2.5, fy + 0.31 + Math.abs(settle) * 0.4, -13 + settle],
+        CHARGER_OUT, [7.8, -19, -58.5], [8.4, -50, -59], [6, fy + R0, -50], [9.5, fy + R0, -41], [5.5, fy + R0, -32], [9.5, fy + R0, -22], [6.5, fy + R0, -15.5], [8, fy + 0.31 + Math.abs(settle) * 0.4, -10 + settle],
       ]));
       return s;
     },
@@ -139,7 +142,7 @@ export const INSERTS: Insert[] = [
   {
     id: "reveal", t0: 18.12, t1: 23.01,
     at: (t) => {
-      let cam = camMove(t, 18.12, 19.3, { pos: [15, 7, -2], target: [XC, 2.2, ZC], fov: 30 }, { pos: [14, 6, -3], target: [XC, 1.8, ZC], fov: 30 });
+      let cam = camMove(t, 18.12, 19.3, { pos: [15, 7.5, -2], target: [XC, 4.6, ZC], fov: 30 }, { pos: [14, 6.5, -3], target: [XC, 4.2, ZC], fov: 30 });
       cam = camMove(t, 19.3, 20.4, cam, { pos: [19, 10, 3], target: [-4, 0.4, -15], fov: 30 });
       cam = camMove(t, 20.8, 22.3, cam, { pos: [15, 7.5, -1], target: [-3, 0.6, -16], fov: 30 });
       const s = base(cam, t < 19.3 ? "hero" : "night", [-3, 0, -16], 22);
@@ -147,7 +150,7 @@ export const INSERTS: Insert[] = [
       const spin = mixn(-0.75, 0, P(t, 18.12, 19.9, ease.glide));
       const y = mixn(3.4 + 0.25 * Math.sin((t - 18.12) * 2.4), 0, down);
       const sq = Math.max(0, bounce(t, 19.95, 0.14, 7, 8)) + (t > 22.2 ? Math.max(0, bounce(t, 22.2, 0.05, 8, 10)) : 0);
-      s.clip = CLIP_C({ p: [XC, y, ZC], yaw: -Math.PI / 2 + spin, squash: sq });
+      s.clip = CLIP_C({ p: [XC, y, ZC], yaw: -Math.PI / 2 + spin, squash: sq, peel: t < 19.9 ? 0 : 1 });
       s.rings.push({ p: [XC, 0.03, ZC], k: pulse(t, 19.95, 0.55), r: 3.2 });
       s.title = { t0: 18.2, t1: 20.3, text: "KLIP KABEL PEREKAT", sub: "5 slot · tipis sampai tebal" };
       // the cable: lying beside the clip, then lifted into slot 1 and pressed down
@@ -170,7 +173,7 @@ export const INSERTS: Insert[] = [
     at: (t) => {
       const X = -34, zClip = -2.6, xs = X + SLOT_X[1];
       const shake = bounce(t, 30.18, 0.5, 11, 6);
-      const cam = camMove(t, 26.05, 31.4, { pos: [6, 5, 30], target: [X + 3, -12, -2], fov: 38 }, { pos: [4, 3, 26], target: [X + 2, -13, -2], fov: 37 }, ease.sine);
+      const cam = camMove(t, 26.05, 31.4, { pos: [30, 8, 24], target: [X, -7.5, 0.5], fov: 38 }, { pos: [26, 6, 21], target: [X, -8.5, 0.5], fov: 38 }, ease.sine);
       cam.pos = [cam.pos[0], cam.pos[1] + shake * 0.6, cam.pos[2]];
       const s = base(cam, "night", [X, -20, 0], 50);
       s.clip = { p: [X, 0, zClip], yaw: 0, wobble: bounce(t, 30.18, 0.06, 9, 7) };
@@ -183,7 +186,7 @@ export const INSERTS: Insert[] = [
       const ys = seatY(1, R0), zTip = -9 + yank;
       const hang = (y: number, z0: number) => z0 - pz * (y < -20 && y > -36 ? 1 : y <= -36 ? 0.6 : 0.25);
       const pts: V3[] = [
-        CHARGER_OUT, [19, -42, -56], [16, -74.8 + R0, -50], [0, -74.8 + R0, -42], [-20, -74.8 + R0, -26], [X + 2, -74.8 + R0, -8],
+        CHARGER_OUT, [7.8, -19, -58.5], [7.5, -60, -58], [6, -74.8 + R0, -50], [-6, -74.8 + R0, -40], [-20, -74.8 + R0, -26], [X + 2, -74.8 + R0, -8],
         [xs - 0.6, -71, hang(-71, 3.6)], [xs - 0.3, -46, hang(-46, 2.8)], [xs - 0.1, -28, hang(-28, 1.6)], [xs, -12, hang(-12, 0.8)], [xs, -1.4, 0.42],
         [xs, R0 + 0.05, -0.1], [xs, mixn(R0, ys, 0.85), zClip + CLIP_D / 2 + 0.45], [xs, ys, zClip + CLIP_D / 2], [xs, ys, zClip - CLIP_D / 2],
         [xs, mixn(ys, R0, 0.6), zClip - CLIP_D / 2 - 1.1], [xs, 0.33 + yank * 0.4, zTip + 1.1], [xs, 0.33 + yank * 0.6, zTip],
@@ -200,7 +203,9 @@ export const INSERTS: Insert[] = [
     id: "socket", t0: 33.42, t1: 38.24,
     at: (t) => {
       const zc = -50, zs = zSlot(1, zc), ys = seatY(1, R0);
-      const cam = camMove(t, 33.42, 37.7, { pos: [30, 44, 6], target: [-6, -10, -40], fov: 36 }, { pos: [26, 40, 2], target: [-7, -9, -39], fov: 35 }, ease.sine);
+      let cam = camMove(t, 33.42, 33.9, { pos: [21, 8, 21], target: [2, -6, -56], fov: 34 }, { pos: [20, 8, 20], target: [2, -6, -56], fov: 34 }, ease.sine);
+      cam = camMove(t, 33.9, 34.65, cam, { pos: [36, 26, -10], target: [-9, -1, -48], fov: 38 });
+      cam = camMove(t, 34.65, 38.2, cam, { pos: [34, 24, -11], target: [-9, -1, -47.5], fov: 38 }, ease.sine);
       const s = base(cam, "night", [-6, -10, -42], 45);
       s.clip = { p: [XC, 0, zc], yaw: -Math.PI / 2 };
       const pull = P(t, 34.9, 36.25, ease.in);
@@ -208,14 +213,14 @@ export const INSERTS: Insert[] = [
       // the plug can only go as far as the cable allows: from (−7.2, zs) toward the front, stopping taut
       const tipX = mixn(-7.2, -8.8, pull), zTip = mixn(zs, zs + 6.2, pull) - tug * 0.25;
       const pts: V3[] = [
-        CHARGER_OUT, [19.5, -33.6, -57], [13, -33, -54], [5, -20, mixn(-52, zs, 0.6)], [1.0, -4.5, zs], [0.5, -1.1, zs],
+        CHARGER_OUT, [7.7, -18.2, -57.4], [6, -21, -55.5], [2.8, -13, mixn(-55, zs, 0.6)], [1.0, -4.5, zs], [0.5, -1.1, zs],
         [0.05, R0 + 0.04, zs], [XF + 0.45, mixn(R0, ys, 0.8), zs], [XF, ys, zs], [XB, ys, zs], [XB - 1.0, mixn(ys, R0, 0.6), mixn(zs, zTip, 0.2)], [tipX + 1.1, 0.34, mixn(zs, zTip, 0.85)], [tipX, 0.36, zTip],
       ];
       s.cables.push(cable("socket", pts));
       const ph = phoneOnTip(tipX, zTip);
       s.phone = { p: ph };
       s.chip = { text: "POSISI 2 · DEKAT COLOKAN", t0: 33.45 };
-      s.tags.push({ text: "Lebih rapi", ok: true, t0: 33.9 }, { text: "Kurang panjang", ok: false, t0: 36.35, y: 1 });
+      s.tags.push({ text: "Lebih rapi", ok: true, t0: 34.4 }, { text: "Kurang panjang", ok: false, t0: 36.35, y: 1 });
       return s;
     },
   },
@@ -260,12 +265,12 @@ export const INSERTS: Insert[] = [
       else if (t < 47.95) { y = hoverTop + 1.3; z = mixn(zSlot(2), zSlot(4), P(t, 47.3, 47.9)); }
       else { y = mixn(hoverTop + 1.3, seatY(4, rT), P(t, 47.95, 48.28, ease.attract)); z = zSlot(4); }
       const held = y - seatY(4, rT);
-      const pts: V3[] = [[0.6, y - 9, z], [0.5, y - 3.5, z], [0.15, y - 0.4, z], [XF, y, z], [XB, y, z], [XB - 1.6, Math.max(rT, y - 0.3 - Math.max(0, 0.5 - held)), z], [-9, Math.max(rT, y - 1.2), z], [-16, Math.max(rT, y - 2.4), z]];
+      const far = held > 0.6 ? y - 0.2 : Math.max(rT, y - 0.5);
+      const pts: V3[] = [[0.6, y - 9, z], [0.5, y - 3.5, z], [0.15, y - 0.4, z], [XF, y, z], [XB, y, z], [XB - 1.6, held > 0.6 ? y - 0.1 : mixn(y, rT, 0.6), z], [-9, far, z], [-16, held > 0.6 ? y - 0.4 : rT, z]];
       s.cables.push(cable("thick", pts, GREY, rT, false));
       s.rings.push({ p: [XC + 0.95, seatY(4, rT), zSlot(4)], k: pulse(t, 48.28, 0.45), r: 1.1, normal: "x" });
       s.chip = { text: "TES SLOT", t0: 46.2 };
       s.tags.push({ text: "Terlalu tebal", ok: false, t0: 46.85 }, { text: "Slot lebih lebar", ok: true, t0: 48.3, y: 1 });
-      s.slotMarks = { t0: 46.3 };
       return s;
     },
   },
@@ -273,9 +278,9 @@ export const INSERTS: Insert[] = [
   {
     id: "thin", t0: 50.16, t1: 53.22,
     at: (t) => {
-      const cam = camMove(t, 50.16, 53.1, { pos: [-17, 5, -8.5], target: [-4.2, 0.4, -15.3], fov: 30 }, { pos: [-15, 4.4, -9.5], target: [-3.8, 0.4, -15.4], fov: 30 }, ease.sine);
+      const cam = camMove(t, 50.16, 53.1, { pos: [-5.6, 9.5, 4.5], target: [-4.3, 0.2, -14.6], fov: 30 }, { pos: [-5.1, 8.6, 3.2], target: [-3.9, 0.2, -14.6], fov: 30 }, ease.sine);
       const s = base(cam, "night", [-5, 0, -15], 16);
-      const rt = 0.12, i = 3, z = zSlot(i), ys = seatY(i, rt);
+      const rt = 0.12, i = 4, z = zSlot(i), ys = seatY(i, rt);
       const jiggle = Math.sin((t - 50.16) * 18) * 0.07 * (1 - P(t, 50.5, 50.7));
       const pull = P(t, 50.7, 51.95, ease.in);
       const stop = 51.95;
@@ -301,7 +306,7 @@ export const INSERTS: Insert[] = [
     id: "test", t0: 53.22, t1: 57.8,
     at: (t) => {
       if (t < 55.05) {
-        const cam = camMove(t, 53.22, 55.0, { pos: [14, 7.5, -5], target: [XC, 2.0, ZC], fov: 30 }, { pos: [13, 6, -6.5], target: [XC, 1.0, ZC], fov: 30 }, ease.sine);
+        const cam = camMove(t, 53.22, 55.0, { pos: [14, 8, -5], target: [XC, 4.4, ZC], fov: 30 }, { pos: [13, 6.5, -6.5], target: [XC, 1.8, ZC], fov: 30 }, ease.sine);
         const s = base(cam, "night", [XC, 0, ZC], 14);
         const peel = P(t, 53.42, 54.05, ease.inOut);
         const flip = Math.PI * (1 - P(t, 54.08, 54.5, ease.inOut));
@@ -363,7 +368,6 @@ export const INSERTS: Insert[] = [
       s.cables.push(cable("hero-white", deskRun({ zEdge: zSlot(1), zClip: zSlot(1), yClip: seatY(1, R0), tipX: -8.2, zTip: zSlot(1) - 0.6 })));
       s.cables.push(cable("hero-thick", deskRun({ zEdge: zSlot(4), zClip: zSlot(4), yClip: seatY(4, 0.3), tipX: -10, r: 0.3, zTip: zSlot(4) + 2.2 }), GREY, 0.3, false));
       s.title = { t0: 67.3, text: "CEK UKURAN SLOTNYA", sub: "pilih yang pas dengan kabelmu" };
-      s.slotMarks = { t0: 67.7 };
       s.cta = { t0: 68.15 };
       s.fade = P(t, 70.75, 71.38, ease.inOut);
       return s;

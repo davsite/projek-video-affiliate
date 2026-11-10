@@ -4,7 +4,7 @@
 //
 // The kit's mix is vo·k + bed·k. k is recovered by least squares against the VO (the bed does not correlate with
 // it), so the bed can be measured — and lowered if needed — on its own. Targets while the VO speaks: bed (music,
-// room, character SFX) ≥ 17 dB under the voice, product SFX ≥ 14 dB under it.
+// room, character SFX) ≥ 18 dB under the voice, product SFX ≥ 15 dB under it.
 
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
@@ -139,11 +139,11 @@ for (let i = 0; i + W < N; i += W) if (duck[i] > 0.9) { speechWins.push(i); voR.
 const voLevel = Math.sqrt(voR.reduce((s, x) => s + x * x, 0) / voR.length);
 const bedLevel = Math.sqrt(bedR.reduce((s, x) => s + x * x, 0) / bedR.length);
 const bedMargin = db(voLevel) - db(bedLevel);
-const gBed = bedMargin < 17 ? dbg(bedMargin - 17) : 1;
+const gBed = bedMargin < 18 ? dbg(bedMargin - 18) : 1;
 // product SFX: loud windows (p90 of the active ones) 14 dB under the voice, a further 3 dB down under speech
 const sfxR: number[] = [];
 for (let i = 0; i + W < N; i += W) { const r = rmsWin(sfx.L, sfx.R, i); if (r > 1e-5) sfxR.push(r); }
-const gS = (voLevel * dbg(-14)) / Math.max(1e-6, pct(sfxR, 0.9));
+const gS = (voLevel * dbg(-15)) / Math.max(1e-6, pct(sfxR, 0.9));
 const SFX_DUCK = dbg(-3);
 
 const L = new Float32Array(N), R = new Float32Array(N);
@@ -160,6 +160,6 @@ const norm = dbg(-1) / peak;
 const out = path.join("public", "audio", `${story.id}-final-mix.wav`);
 writeWav(out, L, R, norm);
 console.log(`product mix: ${out} (${(N / SR).toFixed(2)} s; kit mix gain k=${k.toFixed(3)})`);
-console.log(`  bed (music + room + character SFX) under speech: ${bedMargin.toFixed(1)} dB below the voice${gBed < 1 ? ` → lowered ${db(gBed).toFixed(1)} dB to 17 dB` : ""}`);
-console.log(`  product SFX: loud windows 14 dB below the voice (−3 dB more under speech), gain ${db(gS).toFixed(1)} dB`);
+console.log(`  bed (music + room + character SFX) under speech: ${bedMargin.toFixed(1)} dB below the voice${gBed < 1 ? ` → lowered ${db(gBed).toFixed(1)} dB to 18 dB` : ""}`);
+console.log(`  product SFX: loud windows 15 dB below the voice (−3 dB more under speech), gain ${db(gS).toFixed(1)} dB`);
 console.log(`  voice over everything else while speaking: median ${pct(margins, 0.5).toFixed(1)} dB, 10th percentile ${pct(margins, 0.1).toFixed(1)} dB`);

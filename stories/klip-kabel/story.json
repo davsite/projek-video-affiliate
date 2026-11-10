@@ -16,8 +16,8 @@
   "beats": [
     { "at": "baru", "do": "confused", "face": "angry" },
     { "at": "ini", "do": "wave" },
-    { "at": "minggu", "do": "smile" },
-    { "at": "siapin", "do": "explain" },
+    { "at": "minggu", "do": "talk" },
+    { "at": "siapin", "do": "explain", "shot": "explain" },
     { "at": "baju", "do": "proud" },
     { "at": "tapi", "do": "shrug" },
     { "at": "hobi", "do": "facepalm" },

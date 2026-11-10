@@ -932,11 +932,12 @@
   },
   {
    "at": "minggu",
-   "do": "smile"
+   "do": "talk"
   },
   {
    "at": "siapin",
-   "do": "explain"
+   "do": "explain",
+   "shot": "explain"
   },
   {
    "at": "baju",

@@ -2,7 +2,7 @@
 
 export type V3 = [number, number, number];
 export const DESK = { x0: -100, x1: 0, z0: -60, z1: 0, top: 0, thick: 2.6, floor: -75, wall: -63 };
-export const SOCKET: V3 = [21, -30, DESK.wall];
+export const SOCKET: V3 = [8, -16, DESK.wall];
 /** Where the charger's cable leaves the brick. */
 export const CHARGER_OUT: V3 = [SOCKET[0], SOCKET[1] - 0.6, DESK.wall + 0.8 + 3 + 0.25];
 export const PHONE = { w: 7.2, l: 15.2, t: 0.85 };

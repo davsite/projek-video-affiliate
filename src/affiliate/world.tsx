@@ -32,10 +32,10 @@ const woodTex = () =>
   }, [1, 1]);
 
 export const Room: React.FC = () => {
-  const wood = phys("aff-desk", { color: "#ffffff", map: woodTex(), roughness: 0.48, clearcoat: 0.35, clearcoatRoughness: 0.3 });
+  const wood = phys("aff-desk", { color: "#f2ece4", map: woodTex(), roughness: 0.58, clearcoat: 0.12, clearcoatRoughness: 0.45 });
   const woodEdge = phys("aff-desk-edge", { color: shade("#c89a6a", 0.9), roughness: 0.5, clearcoat: 0.3 });
   const wall = phys("aff-wall", { color: "#ffffff", map: paintTex("aff-wall", "#8ea6c4", [3, 3]), roughness: 0.92 });
-  const floor = phys("aff-floor", { color: "#ffffff", map: plankTex([2.2, 1.6], "#a77b55"), roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.4 });
+  const floor = phys("aff-floor", { color: "#ffffff", map: plankTex([3.5, 2.5], "#a77b55"), roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.4 });
   const white = phys("aff-white", { color: "#f4f2ee", roughness: 0.4, clearcoat: 0.4 });
   const { x0, x1, z0, z1, thick, floor: fy, wall: wz } = DESK;
   const legH = -thick - fy;
@@ -151,7 +151,7 @@ export const Phone: React.FC<{ p: V3; yaw?: number; tilt?: number; roll?: number
 const Plug: React.FC<{ at: V3; dir: V3; color: string; scale: number }> = ({ at, dir, color, scale }) => {
   const d = new Vector3(...dir).normalize();
   const yaw = Math.atan2(d.x, d.z), pitch = -Math.asin(Math.max(-1, Math.min(1, d.y)));
-  const body = phys(`aff-plug${color}`, { color, roughness: 0.42, clearcoat: 0.3 });
+  const body = phys(`aff-plug${color}`, { color, roughness: 0.5, clearcoat: 0.15 });
   return (
     <group position={at} rotation={[pitch, yaw, 0, "YXZ"]} scale={scale}>
       <mesh geometry={cyl(0.24, 0.3, 0.8, 16)} material={body} position={[0, 0, 0.3]} rotation={[Math.PI / 2, 0, 0]} castShadow />
@@ -169,7 +169,7 @@ export const Cable: React.FC<{ c: CableSpec }> = ({ c }) => {
     return new TubeGeometry(curve, Math.min(600, Math.max(48, Math.round(len * 1.6))), c.r, 12, false);
   }, [sig, c.r]);
   useEffect(() => () => geo.dispose(), [geo]);
-  const mat = phys(`aff-cable${c.color}`, { color: c.color, roughness: 0.5, clearcoat: 0.25, sheen: 0.2 });
+  const mat = phys(`aff-cable${c.color}`, { color: c.color, roughness: 0.55, clearcoat: 0.1 });
   const n = c.pts.length, a = c.pts[n - 2], b = c.pts[n - 1];
   return (
     <group>
@@ -182,7 +182,7 @@ export const Cable: React.FC<{ c: CableSpec }> = ({ c }) => {
 // ── the clip ──────────────────────────────────────────────────────────────────────────────────────────────
 export const CLIP_COLOR = "#2c2f36";
 export const Clip: React.FC<{ s: ClipSpec }> = ({ s }) => {
-  const silicone = phys("aff-silicone", { color: CLIP_COLOR, roughness: 0.62, sheen: 0.35, sheenColor: "#8890a0", clearcoat: 0.12, clearcoatRoughness: 0.6 });
+  const silicone = phys("aff-silicone", { color: CLIP_COLOR, roughness: 0.6, sheen: 0.4, sheenColor: "#9aa3b5", clearcoat: 0.15, clearcoatRoughness: 0.55 });
   const foam = phys("aff-foam", { color: "#ece6d8", roughness: 0.95 });
   const liner = phys("aff-liner", { color: "#d8463c", roughness: 0.4, clearcoat: 0.5, side: DoubleSide });
   const peel = s.peel ?? 0;
@@ -204,11 +204,12 @@ export const Clip: React.FC<{ s: ClipSpec }> = ({ s }) => {
 };
 const Liner: React.FC<{ peel: number; mat: ReturnType<typeof phys> }> = ({ peel, mat }) => {
   // flat part still stuck to the foam, and a flap that lifts off from the +X end and folds back
-  const L = CLIP_L + 0.4, xf = L / 2 - peel * L, flat = xf + L / 2, flap = peel * L;
-  const th = Math.min(1, peel * 3) * 2.4;
+  const L = CLIP_L + 0.4, pk = Math.min(1, peel / 0.85), xf = L / 2 - pk * L, flat = xf + L / 2, flap = pk * L;
+  const away = Math.max(0, (peel - 0.85) / 0.15);
+  const th = Math.min(1, pk * 2.2) * 2.75;
   const g = box(1, 0.02, CLIP_D + 0.12, 0.004);
   return (
-    <group>
+    <group position={[away * 3, -away * 2.5, 0]} scale={1 - away * 0.6}>
       {flat > 0.01 ? <mesh geometry={g} material={mat} position={[-L / 2 + flat / 2, -0.012, 0]} scale={[flat, 1, 1]} /> : null}
       {flap > 0.01 ? <mesh geometry={g} material={mat} position={[xf + (Math.cos(th) * flap) / 2, -0.012 - (Math.sin(th) * flap) / 2, 0]} rotation={[0, 0, -th]} scale={[flap, 1, 1]} /> : null}
       {/* pull tab beyond the +X end */}
@@ -237,11 +238,12 @@ export const Sparkles: React.FC<{ c: V3; k: number; r: number; seed?: number }> 
     <group position={c}>
       {Array.from({ length: 9 }, (_, i) => {
         const a = rnd() * Math.PI * 2, e = (rnd() - 0.3) * 1.2, d = r * (0.5 + rnd() * 0.7) * (0.3 + 0.7 * k);
-        const s = Math.sin(Math.PI * Math.min(1, k * 1.4 - rnd() * 0.3 + 0.2)) * r * 0.07;
+        const s = Math.max(0, Math.sin(Math.PI * Math.min(1, k * 1.4 - rnd() * 0.3 + 0.2))) * r * 0.035;
         return s > 0.0001 ? (
-          <mesh key={i} geometry={sphere(1, 8, 6)} position={[Math.cos(a) * d, Math.sin(e) * d + r * 0.2, Math.sin(a) * d]} scale={s}>
-            <meshBasicMaterial color="#fff3c2" toneMapped={false} />
-          </mesh>
+          <group key={i} position={[Math.cos(a) * d, Math.sin(e) * d + r * 0.2, Math.sin(a) * d]} scale={s}>
+            <mesh geometry={box(0.18, 1.6, 0.18, 0.05)}><meshBasicMaterial color="#fff6d5" toneMapped={false} /></mesh>
+            <mesh geometry={box(1.6, 0.18, 0.18, 0.05)}><meshBasicMaterial color="#fff6d5" toneMapped={false} /></mesh>
+          </group>
         ) : null;
       })}
     </group>
