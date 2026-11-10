@@ -190,7 +190,7 @@ export const InsertFrame: React.FC<{ s: State; t: number; t1: number; frame: num
       {s.chair ? <Chair p={s.chair} /> : null}
       {s.clip ? <Clip s={s.clip} /> : null}
       {s.cables.map((c) => <Cable key={c.key} c={c} />)}
-      {s.phone ? <Phone p={s.phone.p} yaw={s.phone.yaw} tilt={s.phone.tilt} roll={s.phone.roll} morning={s.mode === "day"} /> : null}
+      {s.phone ? <Phone p={s.phone.p} yaw={s.phone.yaw} tilt={s.phone.tilt} roll={s.phone.roll} morning={s.mode === "day"} shadow={s.phone.shadow} /> : null}
       {s.rings.map((r, i) => <Ring key={i} {...r} />)}
       {s.sparkles.map((sp, i) => <Sparkles key={i} {...sp} />)}
       <CameraRig cam={s.cam} />

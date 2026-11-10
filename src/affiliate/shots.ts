@@ -15,7 +15,7 @@ export type State = {
   shadow: number;
   clip?: ClipSpec;
   cables: CableSpec[];
-  phone?: { p: V3; yaw?: number; tilt?: number; roll?: number };
+  phone?: { p: V3; yaw?: number; tilt?: number; roll?: number; shadow?: boolean };
   chair?: V3;
   rings: { p: V3; k: number; r: number; color?: string; normal?: "y" | "x" | "z" }[];
   sparkles: { c: V3; k: number; r: number; seed?: number }[];
@@ -134,7 +134,7 @@ export const INSERTS: Insert[] = [
         const pts: V3[] = [...chargerToRightEdge(z, 8 + fall * 14).slice(0, 4), [1.6, mixn(-3, tipY + 4, fall), z], prev, [tipX, tipY, z]];
         s.cables.push(cable("slide-fall", pts));
       }
-      if (lift < 0.7) s.phone = { p: [phoneOnTip(tip0, z)[0] - lift * 6, PHONE.t / 2 + lift * 26, z], roll: lift * 0.5, tilt: -lift * 0.35 };
+      if (lift < 0.7) s.phone = { p: [phoneOnTip(tip0, z)[0] - lift * 6, PHONE.t / 2 + lift * 26, z], roll: lift * 0.5, tilt: -lift * 0.35, shadow: lift < 0.15 };
       return s;
     },
   },
@@ -329,7 +329,7 @@ export const INSERTS: Insert[] = [
       const ins = t < 55.42 ? 1 - P(t, 55.3, 55.42) : t < 56.45 ? 0 : 1;
       const away = t < 56.0 ? out : 1 - back;
       const ph = phoneOnTip(tipX, zs, ins);
-      if (away < 0.75) s.phone = { p: [ph[0] - away * 7, ph[1] + Math.max(0, away - 0.15) * 30, zs], roll: away * 0.35, tilt: -away * 0.25 };
+      if (away < 0.75) s.phone = { p: [ph[0] - away * 7, ph[1] + Math.max(0, away - 0.15) * 30, zs], roll: away * 0.35, tilt: -away * 0.25, shadow: away < 0.15 };
       s.rings.push({ p: [tipX - PLUG_LEN + 0.3, 0.4, zs], k: pulse(t, 56.45, 0.4), r: 1.4, normal: "x" });
       s.sparkles.push({ c: [XC, 1.2, zs], k: pulse(t, 56.55, 0.9), r: 4, seed: 3 });
       s.chip = { text: "CABUT – PASANG LAGI", t0: 55.1 };

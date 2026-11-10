@@ -117,12 +117,12 @@ const screenTex = (clock: string, day: string) =>
   });
 
 /** Lying phone: centre at p, screen up, its bottom edge (charging port) toward +X when yaw = 0. */
-export const Phone: React.FC<{ p: V3; yaw?: number; tilt?: number; roll?: number; morning: boolean }> = ({ p, yaw = 0, tilt = 0, roll = 0, morning }) => {
+export const Phone: React.FC<{ p: V3; yaw?: number; tilt?: number; roll?: number; morning: boolean; shadow?: boolean }> = ({ p, yaw = 0, tilt = 0, roll = 0, morning, shadow = true }) => {
   const scr = phys(`aff-phonescr${morning}`, { color: "#000000", emissive: "#ffffff", emissiveMap: screenTex(morning ? "06:52" : "21:47", morning ? "Senin, 10 November" : "Minggu, 9 November"), emissiveIntensity: 0.85, roughness: 0.15, clearcoat: 1 });
   return (
     <group position={p} rotation={[0, yaw, 0]}>
       <group rotation={[roll, 0, tilt]}>
-        <mesh geometry={box(PHONE.l, PHONE.t, PHONE.w, 0.9)} material={phys("aff-phonebody", { color: "#2a2d36", roughness: 0.3, metalness: 0.5, clearcoat: 0.6 })} castShadow receiveShadow />
+        <mesh geometry={box(PHONE.l, PHONE.t, PHONE.w, 0.9)} material={phys("aff-phonebody", { color: "#2a2d36", roughness: 0.3, metalness: 0.5, clearcoat: 0.6 })} castShadow={shadow} receiveShadow />
         <mesh geometry={cached("aff-phonescreen", () => new PlaneGeometry(PHONE.w - 0.55, PHONE.l - 0.7))} material={scr} position={[0, PHONE.t / 2 + 0.01, 0]} rotation={[-Math.PI / 2, 0, Math.PI / 2]} />
         {/* port */}
         <mesh geometry={box(0.12, 0.3, 0.9, 0.1)} material={basic("aff-port", { color: "#0c0d10" })} position={[PHONE.l / 2 + 0.01, 0, 0]} />
