@@ -1,0 +1,39 @@
+{
+  "name": "voynann-motion-project",
+  "version": "1.0.0",
+  "private": true,
+  "description": "VOYNANN Motion 3D project (Remotion + React Three Fiber), created from the voynann-motion starter.",
+  "type": "module",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "scripts": {
+    "dev": "remotion studio",
+    "typecheck": "tsc --noEmit",
+    "check-env": "node scripts/check-env.mjs",
+    "smoke": "node scripts/stills.mjs out/smoke 0.5s,3s,5.5s ShowcasePreview",
+    "stills": "node scripts/stills.mjs",
+    "vo": "node scripts/vo-analyze.mjs",
+    "render:final": "node scripts/render-final.mjs"
+  },
+  "dependencies": {
+    "@react-three/fiber": "9.8.2",
+    "@remotion/cli": "4.0.539",
+    "@remotion/google-fonts": "4.0.539",
+    "@remotion/three": "4.0.539",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "remotion": "4.0.539",
+    "three": "0.186.1"
+  },
+  "devDependencies": {
+    "@remotion/bundler": "4.0.539",
+    "@remotion/renderer": "4.0.539",
+    "@types/react": "19.2.7",
+    "@types/three": "0.186.0",
+    "typescript": "5.9.3"
+  },
+  "overrides": {
+    "zod": "4.6.7"
+  }
+}

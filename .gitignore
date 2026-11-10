@@ -1,0 +1,7 @@
+node_modules
+out
+.gl-mode
+build
+.DS_Store
+parts
+public/audio/*-mix.wav

@@ -1,0 +1,130 @@
+name: Render video
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "stills = check frames · audio = mix only · final = full 1080x1920 60fps MP4"
+        type: choice
+        options: [stills, audio, final]
+        default: stills
+      stills:
+        description: Seconds to check (stills mode), comma separated
+        type: string
+        default: "1.2,3.4,6,11,13.6,14.6,15.3,17,18.5,20,22.3,24.8,27.6,30.3,32.5,35,36.6,39.5,42.6,45,46.9,48.5,49.6,51,52.4,53.8,55.6,56.7,59,62.6,63.9,66,68.5,70.5"
+      comp:
+        description: Composition for stills (ov-preview = 540x960, ov-final = 1080x1920)
+        type: choice
+        options: [ov-preview, ov-final]
+        default: ov-preview
+      parts:
+        description: Parallel slices (final mode)
+        type: string
+        default: "12"
+
+env:
+  STORY: klip-kabel
+  GL: swangle
+
+jobs:
+  prep:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    outputs:
+      parts: ${{ steps.plan.outputs.parts }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci --no-audit --no-fund
+      - name: Type check
+        run: npx tsc --noEmit
+      - name: Direct the story, build the sound and the product foley
+        run: node scripts/prep.mjs "stories/$STORY/story.json"
+      - id: plan
+        env:
+          PARTS: ${{ inputs.parts }}
+        run: echo "parts=$(node -e 'console.log(JSON.stringify([...Array(Number(process.env.PARTS)).keys()]))')" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audio
+          path: |
+            public/audio/${{ env.STORY }}-final-mix.wav
+            out/${{ env.STORY }}/shots.json
+          retention-days: 7
+
+  stills:
+    if: inputs.mode == 'stills'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/prep.mjs "stories/$STORY/story.json" --no-sound
+      - name: Render stills
+        env:
+          SECONDS_LIST: ${{ inputs.stills }}
+          COMP: ${{ inputs.comp }}
+        run: |
+          START=$(date +%s)
+          LIST=$(echo "$SECONDS_LIST" | sed -E 's/([0-9.]+)/\1s/g')
+          node scripts/stills.mjs "out/$STORY/stills" "$LIST" "$STORY-$COMP"
+          echo "stills took $(( $(date +%s) - START )) s"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stills
+          path: out/${{ env.STORY }}/stills/
+          retention-days: 7
+
+  render:
+    if: inputs.mode == 'final'
+    needs: prep
+    runs-on: ubuntu-24.04
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ${{ fromJSON(needs.prep.outputs.parts) }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24, cache: npm }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - run: npm ci --no-audit --no-fund
+      - run: node scripts/prep.mjs "stories/$STORY/story.json" --no-sound
+      - name: Render slice
+        run: node scripts/ci-part.mjs --comp="$STORY-ov-final" --part=${{ matrix.part }} --parts=${{ inputs.parts }} --out=parts/part${{ matrix.part }}.mp4 --concurrency=2
+      - uses: actions/upload-artifact@v4
+        with:
+          name: part-${{ matrix.part }}
+          path: parts/part${{ matrix.part }}.mp4
+          retention-days: 3
+
+  join:
+    if: inputs.mode == 'final'
+    needs: render
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 24 }
+      - run: sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
+      - uses: actions/download-artifact@v4
+        with: { name: audio, path: . }
+      - uses: actions/download-artifact@v4
+        with: { pattern: part-*, path: parts, merge-multiple: true }
+      - name: Join, master and check
+        run: node scripts/ci-join.mjs --id="$STORY" --parts-dir=parts --count=${{ inputs.parts }} --mix="public/audio/$STORY-final-mix.wav" --vo="public/audio/$STORY.mp3"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: final
+          path: |
+            out/${{ env.STORY }}/*.mp4
+            out/${{ env.STORY }}/qa/
+          retention-days: 14

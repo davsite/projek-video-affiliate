@@ -1,0 +1,43 @@
+{
+  "id": "klip-kabel",
+  "title": "Dika, kabel charger yang suka kabur, dan klip kabel di tepi meja",
+  "vo": { "file": "audio/klip-kabel.mp3", "offset": 0.4 },
+  "words": "words.json",
+  "env": "bedroom",
+  "time": "night",
+  "cast": [
+    { "id": "dika", "look": "raka", "prop": "phone" }
+  ],
+  "start": { "dika": "chair" },
+  "mood": "playful",
+  "scenes": [
+    { "at": "senin", "env": "bedroom", "time": "day", "start": { "dika": "chair" } }
+  ],
+  "beats": [
+    { "at": "baru", "do": "confused", "face": "angry" },
+    { "at": "ini", "do": "wave" },
+    { "at": "minggu", "do": "smile" },
+    { "at": "siapin", "do": "explain" },
+    { "at": "baju", "do": "proud" },
+    { "at": "tapi", "do": "shrug" },
+    { "at": "hobi", "do": "facepalm" },
+    { "at": "coba", "do": "think", "thought": { "text": "Ujungnya taruh di mana?" } },
+    { "at": "sebelum", "do": "standUp" },
+    { "at": "dika#1", "do": "think", "thought": { "text": "Dua posisi, mana ya?" } },
+    { "at": "sisi#2", "do": "point" },
+    { "at": "pilih", "do": "nod" },
+    { "at": "duduk", "do": "sitDown" },
+    { "at": "uji", "do": "explain" },
+    { "at": "kalau#2", "do": "confused" },
+    { "at": "tes", "do": "explain" },
+    { "at": "sekadar", "do": "shake" },
+    { "at": "senin", "do": "happy" },
+    { "at": "kamu", "do": "point" }
+  ],
+  "cards": [
+    { "at": "minggu", "until": "laptop", "text": "MINGGU MALAM" },
+    { "at": "senin", "until": "tinggal", "text": "SENIN PAGI" }
+  ],
+  "highlights": ["di bawah meja", "satu tempat tetap", "dua posisi", "slot yang lebih lebar", "Tes kecil", "tautan di profil"],
+  "tail": 1.8
+}
