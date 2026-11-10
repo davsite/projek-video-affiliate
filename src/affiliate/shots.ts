@@ -131,10 +131,10 @@ export const INSERTS: Insert[] = [
       } else {
         // over the edge: hanging from the charger, the plug falling
         const prev = mixv([tipX + 1.2, tipY + 0.05, z], [tipX + 0.25, tipY + 2.6, z], P(t, 14.95, 15.15, ease.out));
-        const pts: V3[] = [...chargerToRightEdge(z, 8 + fall * 14).slice(0, 5), [0.9, mixn(-2.5, tipY + 6, fall), z], prev, [tipX, tipY, z]];
+        const pts: V3[] = [...chargerToRightEdge(z, 8 + fall * 14).slice(0, 4), [1.6, mixn(-3, tipY + 4, fall), z], prev, [tipX, tipY, z]];
         s.cables.push(cable("slide-fall", pts));
       }
-      if (lift < 1) s.phone = { p: [phoneOnTip(tip0, z)[0] - lift * 6, PHONE.t / 2 + lift * 26, z], roll: lift * 0.5, tilt: -lift * 0.35 };
+      if (lift < 0.7) s.phone = { p: [phoneOnTip(tip0, z)[0] - lift * 6, PHONE.t / 2 + lift * 26, z], roll: lift * 0.5, tilt: -lift * 0.35 };
       return s;
     },
   },
@@ -250,7 +250,7 @@ export const INSERTS: Insert[] = [
   {
     id: "thick", t0: 46.16, t1: 48.99,
     at: (t) => {
-      const cam = camMove(t, 46.16, 48.9, { pos: [18, 5.2, -10.5], target: [XC, 0.9, -15.4], fov: 30 }, { pos: [17, 4.6, -11.2], target: [XC, 0.8, -15.2], fov: 30 }, ease.sine);
+      const cam = camMove(t, 46.16, 48.9, { pos: [10.5, 7.2, -3.6], target: [-3.4, 0.8, -15.4], fov: 30 }, { pos: [9.6, 6.6, -4.4], target: [-3.4, 0.8, -15.4], fov: 30 }, ease.sine);
       const s = base(cam, "night", [XC, 0, ZC], 14);
       const rT = 0.3;
       const hit = 46.8;
@@ -329,7 +329,7 @@ export const INSERTS: Insert[] = [
       const ins = t < 55.42 ? 1 - P(t, 55.3, 55.42) : t < 56.45 ? 0 : 1;
       const away = t < 56.0 ? out : 1 - back;
       const ph = phoneOnTip(tipX, zs, ins);
-      if (away < 0.999) s.phone = { p: [ph[0] - away * 7, ph[1] + Math.max(0, away - 0.15) * 30, zs], roll: away * 0.35, tilt: -away * 0.25 };
+      if (away < 0.75) s.phone = { p: [ph[0] - away * 7, ph[1] + Math.max(0, away - 0.15) * 30, zs], roll: away * 0.35, tilt: -away * 0.25 };
       s.rings.push({ p: [tipX - PLUG_LEN + 0.3, 0.4, zs], k: pulse(t, 56.45, 0.4), r: 1.4, normal: "x" });
       s.sparkles.push({ c: [XC, 1.2, zs], k: pulse(t, 56.55, 0.9), r: 4, seed: 3 });
       s.chip = { text: "CABUT – PASANG LAGI", t0: 55.1 };

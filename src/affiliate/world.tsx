@@ -4,8 +4,8 @@
 
 import React, { useEffect, useMemo } from "react";
 import { CatmullRomCurve3, DoubleSide, PlaneGeometry, TubeGeometry, Vector3 } from "three";
-import { box, cached, cyl, sphere, torus } from "../kits/characterflow/lib/geo.ts";
-import { basic, canvasTex, mulberry32, phys, shade } from "../kits/characterflow/lib/mats.ts";
+import { box, cached, cyl, torus } from "../kits/characterflow/lib/geo.ts";
+import { basic, canvasTex, mulberry32, phys } from "../kits/characterflow/lib/mats.ts";
 import { paintTex, plankTex } from "../kits/characterflow/env/textures.ts";
 import { FONT } from "../core/type/fonts.ts";
 import { CLIP_D, CLIP_L, PAD, clipGeometry } from "./clip.ts";
@@ -33,7 +33,7 @@ const woodTex = () =>
 
 export const Room: React.FC = () => {
   const wood = phys("aff-desk", { color: "#f2ece4", map: woodTex(), roughness: 0.58, clearcoat: 0.12, clearcoatRoughness: 0.45 });
-  const woodEdge = phys("aff-desk-edge", { color: shade("#c89a6a", 0.9), roughness: 0.5, clearcoat: 0.3 });
+  const woodEdge = phys("aff-desk-legs", { color: "#2b2d33", roughness: 0.4, clearcoat: 0.2 });
   const wall = phys("aff-wall", { color: "#ffffff", map: paintTex("aff-wall", "#8ea6c4", [3, 3]), roughness: 0.92 });
   const floor = phys("aff-floor", { color: "#ffffff", map: plankTex([3.5, 2.5], "#a77b55"), roughness: 0.55, clearcoat: 0.25, clearcoatRoughness: 0.4 });
   const white = phys("aff-white", { color: "#f4f2ee", roughness: 0.4, clearcoat: 0.4 });
@@ -73,30 +73,16 @@ export const Room: React.FC = () => {
 
 // ── chair (only in the "outer edge" shot) ─────────────────────────────────────────────────────────────────
 export const Chair: React.FC<{ p: V3 }> = ({ p }) => {
-  const fabric = phys("aff-chair", { color: "#34456b", roughness: 0.8, sheen: 0.4, sheenColor: "#9fb3e0" });
-  const dark = phys("aff-chairdark", { color: "#24262c", roughness: 0.45, clearcoat: 0.3 });
+  // the same desk chair as in Dika's bedroom: yellow seat and back, dark post on a round foot
+  const seat = phys("aff-chair", { color: "#f2b544", roughness: 0.55, clearcoat: 0.2 });
+  const dark = phys("aff-chairdark", { color: "#2b2d33", roughness: 0.4 });
   const fy = DESK.floor - p[1];
   return (
     <group position={p}>
-      {/* seat (top at y = 0 in chair space), backrest away from the desk (+z), armrests */}
-      <mesh geometry={box(46, 7, 46, 3)} material={fabric} position={[0, -3.5, 0]} castShadow receiveShadow />
-      <mesh geometry={box(44, 48, 6, 3)} material={fabric} position={[0, 30, 23]} rotation={[-0.08, 0, 0]} castShadow receiveShadow />
-      {[-1, 1].map((sx) => (
-        <group key={sx}>
-          <mesh geometry={box(5, 2.6, 24, 1.1)} material={dark} position={[sx * 24.5, 20, 2]} castShadow />
-          <mesh geometry={box(2.4, 20, 2.4, 0.6)} material={dark} position={[sx * 24.5, 9, 9]} castShadow />
-        </group>
-      ))}
-      <mesh geometry={cyl(2.2, 2.2, -fy - 10, 20)} material={dark} position={[0, (fy + 10) / 2 - 7, 0]} castShadow />
-      {[0, 1, 2, 3, 4].map((i) => {
-        const a = (i / 5) * Math.PI * 2 + 0.3;
-        return (
-          <group key={i} rotation={[0, a, 0]}>
-            <mesh geometry={box(28, 2.6, 4, 1)} material={dark} position={[14, fy + 6, 0]} castShadow />
-            <mesh geometry={sphere(2.6, 16, 10)} material={dark} position={[27, fy + 2.6, 0]} castShadow />
-          </group>
-        );
-      })}
+      <mesh geometry={box(45, 5, 45, 2)} material={seat} position={[0, -2.5, 0]} castShadow receiveShadow />
+      <mesh geometry={box(45, 50, 6, 2)} material={seat} position={[0, 25, 22]} castShadow receiveShadow />
+      <mesh geometry={cyl(3, 3, -fy - 6, 16)} material={dark} position={[0, (fy - 5) / 2, 0]} castShadow />
+      <mesh geometry={cyl(24, 24, 3, 32)} material={dark} position={[0, fy + 1.5, 0]} castShadow receiveShadow />
     </group>
   );
 };
