@@ -13,3 +13,7 @@
   Runner tanpa GPU → GL=swangle; final dibagi ke beberapa job paralel (`parts`).
 - Bentuk produk: halaman Shopee tidak bisa dibuka otomatis; model dibuat dari deskripsi naskah (klip perekat
   silikon, slot berbeda ukuran). Sesuaikan `clip.ts` kalau ada foto produk.
+- Final 2026-11-11: 12 slices rendered on Actions (about 45–60 min each, ≈7.6 s/frame at 1080p60 with swangle).
+  The join job could not start because of an account billing / spending-limit block, so the join (concat + mix +
+  −14 LUFS master + QA) ran in the codespace: `node scripts/ci-join.mjs --id=klip-kabel --parts-dir=out/ci/parts
+  --count=12 --mix=public/audio/klip-kabel-final-mix.wav --vo=public/audio/klip-kabel.mp3`. 13/13 QA checks passed.
